@@ -22,3 +22,6 @@ Lat = ncdf.variables['Latitude'][:]
 Lon = ncdf.variables['Longitude'][:]
 Temp = ncdf.variables['t'][:]
 u = ncdf.variables['u'][:]
+
+
+#%%

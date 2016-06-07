@@ -12,7 +12,7 @@ from mpl_toolkits.mplot3d import axes3d
 import scipy
 
 #%%Data inladen (verschilt per computer!)
-file = 'C:\Users\Rob\Documents\Localstudy\BoundaryLayers\DataIsentropicMassFlux.nc'
+file = 'C:\Users\Rob\Documents\Localstudy\BoundaryLayers\DataIsentropicMassFluxTh.nc'
 ncdf = Dataset(file, mode='r')
 
 #%%Uithalen variabelen
@@ -22,10 +22,6 @@ Time = ncdf.variables['time'][:]
 Levels = ncdf.variables['level'][:]
 Levels=Levels[::-1]
 
-#%%
-v = ncdf.variables['v'][Tpoint][Ppoint][:][:]
-Temp = ncdf.variables['t'][Tpoint][Ppoint[:][:]
-
 #%%Calculations
 Tpoint=1
 Ppoint=3
@@ -34,29 +30,39 @@ Rcp = 0.286
 Theta = Temp*(Pref/Ppoint)**Rcp
 g=9.81
 
-def Tempf(plev,tlev,latlev):
-    return np.mean(ncdf.variables['t'][tlev][36-plev][latlev][:])
-
-def Theta(plev,tlev,latlev):
-    T = Tempf(plev,tlev,latlev)
-    return T*(Pref/Levels[plev])**Rcp
-
-def Sigma(plev,tlev,latlev):
-    DeltaTh = Theta(plev+1,tlev,latlev)-Theta(plev-1,tlev,latlev)
-    Deltap = Levels[plev+1]-Levels[plev-1]
-    return -1./g * Deltap/DeltaTh
+def Pres(Thlev,tlev):
+    return ncdf.variables['p'][tlev][Thlev][:][:]
     
-def Heatflux(plev,tlev,latlev):
+def ZonalMeanPres(Thlev,tlev,latlev):
+    return np.mean(ncdf.variables['p'][tlev][Thlev][latlev][:])
+
+def Sigma(Thlev,tlev):
+    DeltaTh = Levels[Thlev+1]-Levels[Thlev-1]
+    Deltap = Pres(Thlev+1,tlev)-Pres(Thlev-1,tlev)
+    return -1./g * Deltap/DeltaTh
+
+def ZonalMeanV(asdfasdf):
+    return np.mean(ncef...)
+    
+def ZonalMeanSigma(Thlev,tlev,latlev):
+    DeltaTh = Levels[Thlev+1]-Levels[Thlev-1]
+    Deltap = ZonalMeanPres(Thlev+1,tlev,latlev)-ZonalMeanPres(Thlev-1,tlev,latlev)
+    return -1./g * Deltap/DeltaTh
+        
+def Heatflux(Thlev,tlev):
+    V = ncdf.variables['v'][tlev][36-plev][:][:]
+    return V*Sigma(plev,tlev)
+    
+def ZonalMeanHeatflux(Thlev,tlev,latlev):
     V = np.mean(ncdf.variables['v'][tlev][36-plev][latlev][:])
-    return V*Sigma(plev,tlev,latlev)
+    return V*ZonalMeanSigma(plev,tlev,latlev)
 
-
-#%% Create vectors
+#%% Create vectors for zonal average
 Supermatrix=[]
 for t in range(0,3):
     HeatFluxVec=[]
     for i in range(0,91):
-        HeatFluxVec.append(Heatflux(2,t,i))
+        ZonalMeanHeatflux.append(Heatflux(2,t,i))
     Supermatrix.append(HeatFluxVec)
     
 #%% Plotting Horizontally

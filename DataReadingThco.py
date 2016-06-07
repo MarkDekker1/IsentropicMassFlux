@@ -20,7 +20,7 @@ Lat = ncdf.variables['latitude'][:]
 Lon = ncdf.variables['longitude'][:]
 Time = ncdf.variables['time'][:]
 Levels = ncdf.variables['level'][:]
-Levels=Levels[::-1]
+#Levels=Levels[::-1]
 
 #%%Calculations
 Tpoint=1
@@ -41,13 +41,42 @@ def Sigma(Thlev,tlev):
     Deltap = Pres(Thlev+1,tlev)-Pres(Thlev-1,tlev)
     return -1./g * Deltap/DeltaTh
 
-def ZonalMeanV(asdfasdf):
-    return np.mean(ncef...)
+def V(Thlev,tlev):
+    return ncdf.variables['v'][tlev][36-plev][:][:]
+    
+def ZonalmeanV(Thlev,tlev,latlev):
+    return np.mean(ncdf.variables['v'][tlev][Thlev][latlev][:])
+    
+def DeviationV(Thlev,tlev,latlev,longlev):
+    return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-ZonalmeanV(Thlev,tlev,latlev)
+    
+#def TemporalmeanV(Thlev,latlev,longlev):
+#    M=ncdf.variables['v'][0][Thlev][latlev][longlev]
+#    for i in range(1,180):
+#        M=M+ncdf.variables['v'][i][Thlev][latlev][longlev]
+#    M=M/180.
+#    return M
+
+#def DeviationV(tlev,Thlev,latlev,longlev):
+#    return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-TemporalmeanV(Thlev,latlev,longlev)    
+    
+#def TemporalmeanSigma(Thlev,latlev,longlev):
+#    M=ncdf.variables['v'][0][Thlev][latlev][longlev]
+#    for i in range(1,180):
+#        M=M+ncdf.variables['v'][i][Thlev][latlev][longlev]
+#    M=M/180.
+#    return M
+
+def DeviationSigma(tlev,Thlev,latlev,longlev):
+    return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-TemporalmeanV(Thlev,latlev,longlev)    
     
 def ZonalMeanSigma(Thlev,tlev,latlev):
     DeltaTh = Levels[Thlev+1]-Levels[Thlev-1]
     Deltap = ZonalMeanPres(Thlev+1,tlev,latlev)-ZonalMeanPres(Thlev-1,tlev,latlev)
     return -1./g * Deltap/DeltaTh
+
+def DeviationsSigma(Thlev,tlev,latlev):
+    return Sigma(Thlev,tlev)
         
 def Heatflux(Thlev,tlev):
     V = ncdf.variables['v'][tlev][36-plev][:][:]
@@ -56,6 +85,11 @@ def Heatflux(Thlev,tlev):
 def ZonalMeanHeatflux(Thlev,tlev,latlev):
     V = np.mean(ncdf.variables['v'][tlev][36-plev][latlev][:])
     return V*ZonalMeanSigma(plev,tlev,latlev)
+
+#%% Vector
+Vvec=np.zeros(360)
+for i in range(0,360):
+    Vvec[i]=DeviationV(2,2,45,i)
 
 #%% Create vectors for zonal average
 Supermatrix=[]

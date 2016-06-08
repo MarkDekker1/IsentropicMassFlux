@@ -50,6 +50,22 @@ def Heatflux(plev,tlev,latlev):
     V = np.mean(ncdf.variables['v'][tlev][36-plev][latlev][:])
     return V*Sigma(plev,tlev,latlev)
 
+#%% Spatial
+def Tempf(plev,tlev):
+    return ncdf.variables['t'][tlev][36-plev][:][:]
+
+def Theta(plev,tlev):
+    T = Tempf(plev,tlev)
+    return T*(Pref/Levels[plev])**Rcp
+
+def Sigma(plev,tlev):
+    DeltaTh = Theta(plev+1,tlev)-Theta(plev-1,tlev)
+    Deltap = Levels[plev+1]-Levels[plev-1]
+    return -1./g * Deltap/DeltaTh
+    
+def Heatflux(plev,tlev):
+    V = ncdf.variables['v'][tlev][36-plev][:][:]
+    return V*Sigma(plev,tlev)
 
 #%% Create vectors
 Supermatrix=[]
@@ -58,6 +74,8 @@ for t in range(0,3):
     for i in range(0,91):
         HeatFluxVec.append(Heatflux(2,t,i))
     Supermatrix.append(HeatFluxVec)
+
+def Heatflux(plev,tlev):
     
 #%% Plotting Horizontally
 Lat_0=np.mean(Lat)

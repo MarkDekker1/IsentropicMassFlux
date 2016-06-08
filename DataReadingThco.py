@@ -27,70 +27,48 @@ Tpoint=1
 Ppoint=3
 Pref = 1000.
 Rcp = 0.286
-Theta = Temp*(Pref/Ppoint)**Rcp
+#Theta = Temp*(Pref/Ppoint)**Rcp
 g=9.81
 
-def Pres(Thlev,tlev):
-    return ncdf.variables['p'][tlev][Thlev][:][:]
-    
-def ZonalMeanPres(Thlev,tlev,latlev):
-    return np.mean(ncdf.variables['p'][tlev][Thlev][latlev][:])
+def Pres(Thlev,tlev,latlev,longlev):
+    return ncdf.variables['pres'][tlev][Thlev][latlev][longlev]
 
-def Sigma(Thlev,tlev):
-    DeltaTh = Levels[Thlev+1]-Levels[Thlev-1]
-    Deltap = Pres(Thlev+1,tlev)-Pres(Thlev-1,tlev)
-    return -1./g * Deltap/DeltaTh
-
-def V(Thlev,tlev):
-    return ncdf.variables['v'][tlev][36-plev][:][:]
-    
 def ZonalmeanV(Thlev,tlev,latlev):
     return np.mean(ncdf.variables['v'][tlev][Thlev][latlev][:])
     
 def DeviationV(Thlev,tlev,latlev,longlev):
     return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-ZonalmeanV(Thlev,tlev,latlev)
-    
-#def TemporalmeanV(Thlev,latlev,longlev):
-#    M=ncdf.variables['v'][0][Thlev][latlev][longlev]
-#    for i in range(1,180):
-#        M=M+ncdf.variables['v'][i][Thlev][latlev][longlev]
-#    M=M/180.
-#    return M
 
-#def DeviationV(tlev,Thlev,latlev,longlev):
-#    return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-TemporalmeanV(Thlev,latlev,longlev)    
-    
-#def TemporalmeanSigma(Thlev,latlev,longlev):
-#    M=ncdf.variables['v'][0][Thlev][latlev][longlev]
-#    for i in range(1,180):
-#        M=M+ncdf.variables['v'][i][Thlev][latlev][longlev]
-#    M=M/180.
-#    return M
-
-def DeviationSigma(tlev,Thlev,latlev,longlev):
-    return ncdf.variables['v'][tlev][Thlev][latlev][longlev]-TemporalmeanV(Thlev,latlev,longlev)    
-    
-def ZonalMeanSigma(Thlev,tlev,latlev):
+def Sigma(Thlev,tlev,latlev,longlev):
     DeltaTh = Levels[Thlev+1]-Levels[Thlev-1]
-    Deltap = ZonalMeanPres(Thlev+1,tlev,latlev)-ZonalMeanPres(Thlev-1,tlev,latlev)
+    Deltap = Pres(Thlev+1,tlev,latlev,longlev)-Pres(Thlev-1,tlev,latlev,longlev)
     return -1./g * Deltap/DeltaTh
 
-def DeviationsSigma(Thlev,tlev,latlev):
-    return Sigma(Thlev,tlev)
-        
-def Heatflux(Thlev,tlev):
-    V = ncdf.variables['v'][tlev][36-plev][:][:]
-    return V*Sigma(plev,tlev)
+def ZonalmeanSigma(Thlev,tlev,latlev):
+    M=0.
+    for i in range(0,360):
+        M=M+Sigma(Thlev,tlev,latlev,i)
+    M=M/360.
+    return M
     
-def ZonalMeanHeatflux(Thlev,tlev,latlev):
-    V = np.mean(ncdf.variables['v'][tlev][36-plev][latlev][:])
-    return V*ZonalMeanSigma(plev,tlev,latlev)
+def DeviationSigma(Thlev,tlev,latlev,longlev):
+    return Sigma(Thlev,tlev,latlev,longlev)-ZonalmeanSigma(Thlev,tlev,latlev)
+        
+def MeanHeatflux(Thlev,tlev,latlev):
+    return ZonalmeanV(Thlev,tlev,latlev)*ZonalmeanSigma(Thlev,tlev,latlev)
+    
+def EddyHeatflux(Thlev,tlev,latlev,longlev):
+    return DeviationV(Thlev,tlev,latlev,longlev)*DeviationSigma(Thlev,tlev,latlev,longlev)
 
 #%% Vector
-Vvec=np.zeros(360)
+Meanvec=np.zeros(91)
+for i in range(0,91):
+    Meanvec[i]=MeanHeatflux(2,2,i)
+#%%
+Eddyvec=np.zeros(shape=(91,360))
 for i in range(0,360):
-    Vvec[i]=DeviationV(2,2,45,i)
-
+    for j in range(0,91):
+        Eddyvec[i]=EddyHeatflux(2,2,j,i)
 #%% Create vectors for zonal average
 Supermatrix=[]
 for t in range(0,3):
